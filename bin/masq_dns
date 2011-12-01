@@ -1,0 +1,36 @@
+#!/usr/bin/env ruby -Ilib
+
+require 'fileutils'
+require "yippee/masq_dns"
+
+class Daemon
+  YIPPEE_ROOT = File.expand_path("../../", __FILE__)
+  PID_FILE = File.join(YIPPEE_ROOT, "var/run/masq_dns.pid")
+
+  def self.start
+    abort "MasqDNS have already been running with pid #{pid}" if pid
+    if pid = fork { Yippee::MasqDNS.new("127.0.0.1", 11253) }
+      puts "MasqDNS started with pid #{pid}"
+      pid_file = File.new(PID_FILE, "w")
+      pid_file.write(pid)
+    end
+  end
+
+  def self.stop
+    if pid
+      Process.kill("TERM", pid)
+      FileUtils.rm(PID_FILE)
+      puts "MasqDNS has stoped"
+    end
+  end
+
+  def self.status
+    puts "MasqDNS have been running with pid #{pid}" if pid
+  end
+
+  def self.pid
+    File.exist?(PID_FILE) && File.read(PID_FILE).to_i
+  end
+end
+
+Daemon.send(ARGV[0]) unless ARGV.empty?
