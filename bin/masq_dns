@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby -Ilib
 
 require 'fileutils'
-require "yippee/masq_dns"
+require 'yippee/masq_dns'
 
 class Daemon
   YIPPEE_ROOT = File.expand_path("../../", __FILE__)
@@ -24,6 +24,12 @@ class Daemon
     end
   end
 
+  def self.restart
+    stop
+    sleep(1)
+    start
+  end
+
   def self.status
     puts "MasqDNS have been running with pid #{pid}" if pid
   end
@@ -33,4 +39,8 @@ class Daemon
   end
 end
 
-Daemon.send(ARGV[0]) unless ARGV.empty?
+unless ARGV.empty?
+  Daemon.send(ARGV[0])
+else
+  puts "#{ENV['_']} #{Daemon.methods(false).join(' ')}"
+end
