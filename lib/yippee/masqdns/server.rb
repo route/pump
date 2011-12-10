@@ -1,14 +1,14 @@
 require 'socket'
-require 'resolv'
-require 'yippee/masq_dns_names'
 
 module Yippee
   class MasqDNS
-    @@domain_names = Names.new(["domain.yippee."])
+    @@domain_names = Settings.domain_names
     @@resource = Resolv::DNS::Resource::IN::A.new("127.0.0.1")
     @@ttl = 10800
 
     def initialize(addr, port)
+      trap("HUP") { reload_domain_names }
+
       # Bind port to receive requests
       socket = UDPSocket.new
       socket.bind(addr, port)
@@ -47,6 +47,10 @@ module Yippee
         end
       end
       answer
+    end
+
+    def reload_domain_names
+      @@domain_names = Settings.domain_names
     end
   end
 end

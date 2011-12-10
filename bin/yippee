@@ -1,3 +1,41 @@
 #!/usr/bin/env ruby
 
-require "yippee"
+require 'optparse'
+require 'rubygems'
+require 'yippee'
+
+optparse = OptionParser.new do |opts|
+  opts.banner = "Usage: yippee [options]"
+
+  opts.on("-i", "--install", "Install yippee configs and run daemons") do
+    abort "Usage: #{Yippee.sudo} yippee -i" unless Yippee.superuser_rights?
+    Yippee.install; exit
+  end
+
+  opts.on("-u", "--uninstall", "Uninstall configuration files and stop daemons") do
+    abort "Usage: #{Yippee.sudo} yippee -u" unless Yippee.superuser_rights?
+    Yippee.uninstall; exit
+  end
+
+  opts.on("-m", "--masqdns", "Start masqdns daemon") do |name|
+    Yippee.masqdns
+  end
+
+  # opts.on("-r", "--rackhttp", "Start rackhttp daemon") do |name|
+  #   Yippee.rackhttp
+  # end
+
+  # opts.on("-w", "--watcher", "Start watcher daemon") do |name|
+  #   Yippee.watcher
+  # end
+
+  opts.on("-v", "--version", "Show version") do
+    puts Yippee::VERSION; exit
+  end
+end
+
+begin
+  optparse.parse!
+rescue OptionParser::InvalidOption
+  puts optparse; exit
+end
