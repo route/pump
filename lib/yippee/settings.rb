@@ -1,9 +1,10 @@
 require 'pathname'
 
 module Yippee
+  USER_CONFIG_DIR = File.join(ENV["HOME"], ".yippee")
+
   module Settings
-    CONFIG_DIR = File.join(ENV["HOME"], ".yippee")
-    PATTERN = File.join(CONFIG_DIR, "*")
+    PATTERN = File.join(USER_CONFIG_DIR, "*")
 
     def self.settings
       symlinks.map do |symlink|

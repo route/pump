@@ -2,6 +2,7 @@ module Yippee
   class MasqDNS
     def self.install
       if Yippee.mac?
+        FileUtils.mkdir(USER_CONFIG_DIR) unless File.exist?(USER_CONFIG_DIR)
         create_masqdns_resolvers
         Yippee.grant_privilege { create_masqdns_plist }
         Yippee.drop_privilege
@@ -14,6 +15,8 @@ module Yippee
 
     def self.uninstall
       if Yippee.mac?
+        # TODO: Delete with confirm
+        # FileUtils.mkdir(USER_CONFIG_DIR) unless File.exist?(USER_CONFIG_DIR)
         remove_masqdns_resolvers
         Yippee.drop_privilege
         stop_masqdns
