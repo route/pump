@@ -6,8 +6,8 @@ module Yippee
         create_masqdns_resolvers
         Yippee.grant_privilege { create_masqdns_plist }
         Yippee.drop_privilege
-        load_masqdns_plist
         create_rvm_wrapper if Yippee.using_rvm?
+        load_masqdns_plist
       else
         abort "Currently support only Mac OS platform"
       end
