@@ -5,9 +5,9 @@ require "yippee/version"
 Gem::Specification.new do |s|
   s.name        = "yippee"
   s.version     = Yippee::VERSION
-  s.authors     = ["Andrey Ognevsky"]
-  s.email       = ["a.ognevsky@gmail.com"]
-  s.homepage    = ""
+  s.authors     = ["Andrey Ognevsky", "Dmitriy Vorotilin"]
+  s.email       = ["a.ognevsky@gmail.com", "d.vorotilin@gmail.com"]
+  s.homepage    = "https://github.com/ognevsky/yippee"
   s.summary     = %q{Pow-like app for pure-Ruby lovers}
   s.description = %q{Pow-like app for pure-Ruby lovers}
 
