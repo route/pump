@@ -1,0 +1,25 @@
+#!/usr/bin/env ruby
+
+require 'rubygems'
+require 'pump'
+
+abort "Currently support only Mac OS platform" unless Pump.mac?
+
+case ARGV.first
+when "install"
+  abort "Usage: #{Pump.sudo} pump install" unless Pump.superuser_rights?
+  Pump.install; exit
+when "uninstall"
+  abort "Usage: #{Pump.sudo} pump uninstall" unless Pump.superuser_rights?
+  Pump.uninstall; exit
+when "masqdns"
+  Pump.masqdns
+when "rackhttp"
+  # Pump.rackhttp
+when "watcher"
+  # Pump.watcher
+when "version"
+  puts Pump::VERSION; exit
+else
+  puts "Usage: pump #{%w{ install uninstall version }.join(' | ')}"
+end

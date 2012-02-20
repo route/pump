@@ -1,47 +1,47 @@
-# yippee
+## Pump
 
-Yippee is a Pow–like gem for Ruby–lovers (or maybe Javascript–haters).
+Zero-configuration Rack server written on pure ruby.
 
-### Only Mac OS X is supported now.
+### Installation
+Only Mac OS X is supported now.
 
-## Installation
+without rvm:
 
-### Without RVM
+    $ gem install pump
+    $ sudo pump install
 
-    $ gem install yippee
-    $ sudo yippee --install
+with rvm:
 
-### With RVM
+We recommend you to use individual gem set for pump. Don't worry pump will be available for all gem sets and rubies.
 
-    $ rvm use 1.9.3@somegemset
-    $ gem install yippee
-    $ rvmsudo yippee --install
+    $ rvm use 1.9.3@pump --create
+    $ gem install pump
+    $ rvmsudo pump install
 
-## Usage
+### Usage
 
-After `yippee --install`, some magic will happen. Yippee's not just like Pow, it's just Powder, too. So, you can manage your projects with ease. 
+After `pump install`, you should create symbol link to your project.
 
-    $ cd ~/code/my_project
-    $ yippee link
+    $ cd ~/.pump
+    $ ln -s /path-to-app/dirname
 
-This will create symlink to your project in `~/.yippee`, just like Pow does it.
-
-## Configuration
-
+By default your project will be available as dirname.pump
 You can set up your own domain name when you create a symlink. It's simple, let's see:
 
-    $ cd ~/.yippee && ln -s /path-to-app domain.name
+    $ cd ~/.pump && ln -s /path-to-app/dirname domain.name
 
 And that's it, yes.
 
-## Uninstall
+### Uninstall
 
-If you dislike yippee, you can uninstall it whenever you want. Just type this:
+You can uninstall it whenever you want.
 
-    $ sudo yippee --uninstall
+without rvm:
 
-or if you using rvm:
+    $ sudo pump uninstall
+    $ gem uninstall pump
 
-    $ rvmsudo yippee --uninstall
+with rvm:
 
-## You are welcome with your pull requests.
+    $ rvmsudo pump uninstall
+    $ gem uninstall pump

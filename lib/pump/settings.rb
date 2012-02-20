@@ -1,7 +1,7 @@
 require 'pathname'
 
-module Yippee
-  USER_CONFIG_DIR = File.join(ENV["HOME"], ".yippee")
+module Pump
+  USER_CONFIG_DIR = File.join(ENV["HOME"], ".pump")
 
   module Settings
     PATTERN = File.join(USER_CONFIG_DIR, "*")
@@ -9,8 +9,8 @@ module Yippee
     def self.settings
       symlinks.map do |symlink|
         name = File.basename(symlink)
-        # TODO: Currently are using only .yippee domain
-        if MasqDNS::Name.create(name).subdomain_of?(Resolv::DNS::Name.create("yippee."))
+        # TODO: Currently are using only .pump domain
+        if MasqDNS::Name.create(name).subdomain_of?(Resolv::DNS::Name.create("pump."))
           [MasqDNS::Name.create(name), Pathname.new(symlink).realpath]
         end
       end.compact

@@ -1,10 +1,10 @@
 require 'resolv'
 
-module Yippee
+module Pump
   class MasqDNS
     class Name
       def self.create(name)
-        Resolv::DNS::Name.create(has_domain?(name) ? "#{name}." : "#{name}.yippee.")
+        Resolv::DNS::Name.create(has_domain?(name) ? "#{name}." : "#{name}.pump.")
       end
 
       def self.has_domain?(name)

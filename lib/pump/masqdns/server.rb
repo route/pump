@@ -1,6 +1,6 @@
 require 'socket'
 
-module Yippee
+module Pump
   class MasqDNS
     @@domain_names = Settings.domain_names
     @@resource = Resolv::DNS::Resource::IN::A.new("127.0.0.1")

@@ -1,17 +1,17 @@
 # -*- encoding: utf-8 -*-
 $:.push File.expand_path("../lib", __FILE__)
-require "yippee/version"
+require "pump/version"
 
 Gem::Specification.new do |s|
-  s.name        = "yippee"
-  s.version     = Yippee::VERSION
-  s.authors     = ["Andrey Ognevsky", "Dmitriy Vorotilin"]
-  s.email       = ["a.ognevsky@gmail.com", "d.vorotilin@gmail.com"]
-  s.homepage    = "https://github.com/ognevsky/yippee"
-  s.summary     = %q{Pow-like app for pure-Ruby lovers}
-  s.description = %q{Pow-like app for pure-Ruby lovers}
+  s.name        = "pump"
+  s.version     = Pump::VERSION
+  s.authors     = ["Dmitriy Vorotilin"]
+  s.email       = ["d.vorotilin@gmail.com"]
+  s.homepage    = "https://github.com/evrone/pump"
+  s.summary     = "Ruby Rack server for developers"
+  s.description = "Zero-configuration Rack server written on pure ruby"
 
-  s.rubyforge_project = "yippee"
+  s.rubyforge_project = "pump"
 
   s.files         = `git ls-files`.split("\n")
   s.test_files    = `git ls-files -- {test,spec,features}/*`.split("\n")
