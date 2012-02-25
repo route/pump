@@ -1,0 +1,71 @@
+#!/usr/bin/env ruby
+
+require 'rubygems'
+require 'logger'
+require 'socket'
+
+require 'rack'
+require 'rack/builder'
+
+module Pump
+  def self.logger
+    @@logger ||= Logger.new(STDERR)
+  end
+
+  class Application
+    def initialize(app_path, socket_path)
+      @app = Rack::Builder.parse_file(File.join(app_path, "config.ru")).first
+      server = UNIXServer.new(socket_path)
+      at_exit { server.close; FileUtils.rm(socket_path) }
+
+      loop do
+        Thread.new(server.accept) do |socket|
+          Pump.logger.debug "Accepted new client"
+
+          env = Marshal.load recvall(socket)
+          response = app_call(env)
+          Pump.logger.debug "Accepted answer from application"
+
+          socket.send Marshal.dump(response), 0
+          socket.close
+        end
+      end
+    end
+
+    def app_call(env)
+      response_body = ""
+      env.delete_if { |k, v| v.nil? }
+
+      rack_input = StringIO.new
+      rack_input.set_encoding(Encoding::BINARY) if rack_input.respond_to?(:set_encoding)
+
+      env.update({
+        "rack.version" => Rack::VERSION,
+        "rack.input" => rack_input,
+        "rack.errors" => $stderr,
+        "rack.multithread" => true,
+        "rack.multiprocess" => false,
+        "rack.run_once" => false,
+        "rack.url_scheme" => ["yes", "on", "1"].include?(ENV["HTTPS"]) ? "https" : "http"
+      })
+
+      status, headers, body = @app.call(env)
+      body.each { |part| response_body << part }
+      body.close  if body.respond_to? :close
+
+      [status.to_i, headers.to_hash, response_body]
+    end
+
+    def recvall(socket)
+      str = ""
+      loop do
+        data, info = socket.recvfrom(512)
+        str << data
+        break if data.empty? || IO.select([socket], nil, nil, 0).nil?
+      end
+      str
+    end
+  end
+end
+
+Pump::Application.new(ARGV[0], ARGV[1])

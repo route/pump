@@ -1,3 +1,5 @@
+require "logger"
+
 module Pump
   module Helpers
     def mac?
@@ -9,21 +11,24 @@ module Pump
       defined?(RVM) ? wrapper_path : %x(which pump)
     end
 
+    # Get pumpup path to run rack application
+    def pumpup_path
+      File.join(PUMP_ROOT, "bin", "pumpup")
+    end
+
     # Check superuser privileges
     def superuser_rights?
       [Process.uid, Process.euid] == [0, 0]
     end
 
-    # Drop superuser privilege temporarily
-    def grant_privilege
-      Process::UID.grant_privilege(ENV["SUDO_UID"].to_i)
-      yield
-      Process::UID.grant_privilege(0)
-    end
-
-    # Drop superuser privilege permanently
-    def drop_privilege
-      Process::UID.change_privilege(ENV["SUDO_UID"].to_i)
+    # Switch superuser privileges
+    def switch_privileges
+      Process.uid, Process.gid = ENV["SUDO_UID"].to_i, ENV["SUDO_GID"].to_i
+      Process::UID.switch {
+        Process::GID.switch {
+          yield
+        }
+      }
     end
 
     def wrapper_path
@@ -32,6 +37,10 @@ module Pump
 
     def sudo
       defined?(RVM) ? "rvmsudo" : "sudo"
+    end
+
+    def logger
+      @@logger ||= Logger.new(STDERR)
     end
   end
 end

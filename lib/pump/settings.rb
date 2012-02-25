@@ -27,5 +27,9 @@ module Pump
     def self.first_level_domains
       domain_names.map { |domain| domain.to_a.last.to_s }.uniq
     end
+
+    def self.find_by_domain(name)
+      settings.find { |domain, path| domain.to_s == name }
+    end
   end
 end

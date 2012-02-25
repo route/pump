@@ -1,7 +1,5 @@
 *.gem
 .bundle
 .rvmrc
-Gemfile.lock
 pkg/*
 tmp
-var

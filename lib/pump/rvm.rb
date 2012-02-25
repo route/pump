@@ -4,3 +4,12 @@ if ENV['MY_RUBY_HOME'] && ENV['MY_RUBY_HOME'].include?('rvm')
   $LOAD_PATH.unshift rvm_lib_path
   require 'rvm' rescue LoadError
 end
+
+# TODO make a PR to RVM
+module RVM
+  class Environment
+    def env_path
+      normalize_array rvm(:env, "--path", "--", environment_name).stdout
+    end
+  end
+end
