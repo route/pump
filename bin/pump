@@ -8,11 +8,11 @@ abort "Currently support only Mac OS platform" unless Pump.mac?
 case ARGV.first
 when "install"
   abort "Usage: #{Pump.sudo} pump install" unless Pump.superuser_rights?
-  [Pump::Install::Common, Pump::Install::MasqDNS, Pump::Install::RackHTTP].each(&:install)
+  [Pump::Install::Common, Pump::Install::MasqDNS, Pump::Install::Firewall, Pump::Install::RackHTTP].each(&:install)
   exit
 when "uninstall"
   abort "Usage: #{Pump.sudo} pump uninstall" unless Pump.superuser_rights?
-  [Pump::Install::MasqDNS, Pump::Install::Common, Pump::Install::RackHTTP].each(&:uninstall)
+  [Pump::Install::MasqDNS, Pump::Install::RackHTTP, Pump::Install::Firewall, Pump::Install::Common].each(&:uninstall)
   exit
 when "masqdnsd"
   Pump.masqdnsd

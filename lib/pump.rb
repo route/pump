@@ -8,6 +8,7 @@ require 'pump/settings'
 require 'pump/install/common'
 require 'pump/install/masqdns'
 require 'pump/install/rackhttp'
+require 'pump/install/firewall'
 
 require 'pump/masqdns/names'
 require 'pump/masqdns/masqdns'
