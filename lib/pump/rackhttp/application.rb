@@ -3,7 +3,7 @@ module Pump
     attr_reader :socket_path, :app_path
 
     def self.get_instance(server, *options)
-      Pump.logger.debug "Getting instance of application"
+      Pump.logger "Getting instance of application"
       @@app ||= new(server, *options)
     end
 
@@ -14,7 +14,7 @@ module Pump
     end
 
     def service(req, res)
-      Pump.logger.debug "Incoming request"
+      Pump.logger "Incoming request"
       socket = UNIXSocket.open(socket_path)
 
       env = req.meta_vars
@@ -29,7 +29,7 @@ module Pump
       socket.send Marshal.dump(env), 0
 
       status, headers, body = Marshal.load recvall(socket)
-      Pump.logger.debug "Application response"
+      Pump.logger "Application response"
 
       res.status = status
       headers.each do |k, vs|
@@ -47,7 +47,7 @@ module Pump
     end
 
     def fork_app
-      Pump.logger.debug "Forking new application"
+      Pump.logger "Forking new application"
       fork do
         args = Pump.pumpup_path, app_path, socket_path
         if defined?(RVM)
@@ -63,7 +63,7 @@ module Pump
     def check_socket
       # TODO Is there another way to check socket existence?
       5.times do |i|
-        Pump.logger.debug "Attempt to check socket existence ##{i}"
+        Pump.logger "Attempt to check socket existence ##{i}"
         break if File.exist?(socket_path)
         sleep 2
       end

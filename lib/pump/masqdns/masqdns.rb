@@ -16,15 +16,15 @@ module Pump
       loop do
         # Receive and parse query
         data, sender_addrinfo = socket.recvfrom(512)
-        Pump.logger.debug "Incoming request"
+        Pump.logger "Incoming request"
 
         Thread.new(data, sender_addrinfo) do |data, sender_addrinfo|
           sender_port, sender_ip = sender_addrinfo[1], sender_addrinfo[2]
           query = Resolv::DNS::Message.decode(data)
-          Pump.logger.debug "Query: #{query.inspect}"
+          Pump.logger "Query: #{query.inspect}"
           answer = setup_answer(query)
           socket.send(answer.encode, 0, sender_ip, sender_port) # Send the response
-          Pump.logger.debug "Answer: #{answer.inspect}"
+          Pump.logger "Answer: #{answer.inspect}"
         end
       end
     end

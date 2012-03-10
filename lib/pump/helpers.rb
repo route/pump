@@ -1,5 +1,3 @@
-require "logger"
-
 module Pump
   module Helpers
     def mac?
@@ -39,8 +37,8 @@ module Pump
       defined?(RVM) ? "rvmsudo" : "sudo"
     end
 
-    def logger
-      @@logger ||= Logger.new(STDERR)
+    def logger(message)
+      STDERR.puts message
     end
   end
 end

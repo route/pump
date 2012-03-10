@@ -1,15 +1,14 @@
 #!/usr/bin/env ruby
 
 require 'rubygems'
-require 'logger'
 require 'socket'
 
 require 'rack'
 require 'rack/builder'
 
 module Pump
-  def self.logger
-    @@logger ||= Logger.new(STDERR)
+  def self.logger(message)
+    STDERR.puts message
   end
 
   class Application
@@ -20,11 +19,11 @@ module Pump
 
       loop do
         Thread.new(server.accept) do |socket|
-          Pump.logger.debug "Accepted new client"
+          Pump.logger "Accepted new client"
 
           env = Marshal.load recvall(socket)
           response = app_call(env)
-          Pump.logger.debug "Accepted answer from application"
+          Pump.logger "Accepted answer from application"
 
           socket.send Marshal.dump(response), 0
           socket.close
