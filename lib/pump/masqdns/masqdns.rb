@@ -3,7 +3,10 @@ require 'socket'
 module Pump
   class MasqDNS
     @@domain_names = Settings.domain_names
-    @@resource = Resolv::DNS::Resource::IN::A.new("127.0.0.1")
+    @@resource = {
+      "A" => Resolv::DNS::Resource::IN::A.new("127.0.0.1"),
+      "AAAA" => Resolv::DNS::Resource::IN::AAAA.new("::1")
+    }
     @@ttl = 10800 # 3 hours
 
     def initialize(addr, port)
@@ -44,10 +47,12 @@ module Pump
 
     def each_question(query, answer)
       query.each_question do |name, typeclass|
-        next unless typeclass.name.split("::").last == "A"    # We need only A-record
-        if @@domain_names.include?(name)
-          answer.add_answer(name, @@ttl, @@resource)          # Setup answer to this name
-          answer.encode                                       # Don't forget encode it
+        type = typeclass.name.split("::").last
+        if type == "A" || type == "AAAA"                      # We need only A and AAAA records
+          if @@domain_names.include?(name)
+            answer.add_answer(name, @@ttl, @@resource[type])  # Setup answer to this name
+            answer.encode                                     # Don't forget encode it
+          end
         end
       end
       answer
