@@ -22,11 +22,13 @@ module Pump
       end
 
       def self.create_masqdns_resolvers
+        resolver_path = "/etc/resolver"
+        FileUtils.mkdir(resolver_path) unless File.exist?(resolver_path)
         config = File.join(PUMP_ROOT, "config/masqdns.conf")
-        resolver = "/etc/resolver/%s"
         Settings.first_level_domains.each do |domain|
-          unless File.exist?(resolver % domain)
-            FileUtils.cp(config, resolver % domain)
+          resolver = File.join(resolver_path, domain)
+          unless File.exist?(resolver)
+            FileUtils.cp(config, resolver)
             puts "Resolver for #{domain} was created."
           end
         end
