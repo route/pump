@@ -9,7 +9,7 @@ end
 module RVM
   class Environment
     def env_path
-      normalize_array rvm(:env, "--path", "--", environment_name).stdout
+      rvm(:env, "--path", "--", environment_name).stdout.strip
     end
   end
 end
