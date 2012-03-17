@@ -62,7 +62,7 @@ module Pump
 
     def check_socket
       # TODO Is there another way to check socket existence?
-      5.times do |i|
+      10.times do |i|
         Pump.logger "Attempt to check socket existence ##{i}"
         break if File.exist?(socket_path)
         sleep 2
