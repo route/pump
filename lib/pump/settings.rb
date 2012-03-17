@@ -17,7 +17,7 @@ module Pump
     end
 
     def self.symlinks
-      Dir.glob(PATTERN).select { |file| File.lstat(file).symlink? }
+      Dir.glob(PATTERN).select { |file| File.lstat(file).symlink? && Pathname.new(file).exist? }
     end
 
     def self.domain_names
