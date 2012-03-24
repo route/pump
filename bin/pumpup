@@ -12,21 +12,36 @@ module Pump
   end
 
   class Application
+    IDLE = 1800 # 30 minutes for idle, otherwise process should be killed
+    TICK = 30   # seconds for periodic selecting data on socket
+
     def initialize(app_path, socket_fileno, socket_path)
-      server = UNIXServer.for_fd(socket_fileno)
-      at_exit { server.close; FileUtils.rm(socket_path) }
+      @idle = 0
+      @server = UNIXServer.for_fd(socket_fileno)
+      at_exit { @server.close; FileUtils.rm(socket_path) }
       @app = Rack::Builder.parse_file(File.join(app_path, "config.ru")).first
+      handle_requests
+    end
 
+    def handle_requests
       loop do
-        Thread.new(server.accept) do |socket|
-          Pump.logger "Accepted new client"
+        unless IO.select([@server], nil, nil, TICK).nil?
+          @idle = 0 # reset idle time
 
-          env = Marshal.load recvall(socket)
-          response = app_call(env)
-          Pump.logger "Accepted answer from application"
+          Thread.new(@server.accept) do |socket|
+            Pump.logger "Accepted new client"
 
-          socket.send Marshal.dump(response), 0
-          socket.close
+            env = Marshal.load recvall(socket)
+            response = app_call(env)
+            Pump.logger "Accepted answer from application"
+
+            socket.send Marshal.dump(response), 0
+            socket.close
+          end
+        else
+          Pump.logger "tick"
+          @idle += TICK
+          exit if @idle >= IDLE
         end
       end
     end

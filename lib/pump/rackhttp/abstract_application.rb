@@ -15,6 +15,8 @@ module Pump
 
     def service(req, res)
       Pump.logger "Incoming request"
+
+      fork_app unless File.exist?(socket_path)
       socket = UNIXSocket.open(socket_path)
 
       env = req.meta_vars
