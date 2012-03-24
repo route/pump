@@ -1,3 +1,5 @@
+require 'pump/install/launchctl'
+
 module Pump
   USER_PLIST_DIR = File.join(ENV["HOME"], "Library/LaunchAgents")
 

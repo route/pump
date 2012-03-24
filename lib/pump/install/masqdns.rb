@@ -8,15 +8,15 @@ module Pump
         create_masqdns_resolvers
         Pump.switch_privileges {
           create_masqdns_plist
-          load_masqdns_plist
+          Launchctl.load(MASQDNS_USER_PLIST)
         }
       end
 
       def self.uninstall
         remove_masqdns_resolvers
         Pump.switch_privileges {
-          stop_masqdns
-          unload_masqdns_plist
+          Launchctl.stop("com.github.pump.masqdnsd")
+          Launchctl.unload(MASQDNS_USER_PLIST)
           remove_masqdns_plist
         }
       end
@@ -40,18 +40,6 @@ module Pump
         File.open(MASQDNS_USER_PLIST, "w") do |file|
           file.write template
         end
-      end
-
-      def self.load_masqdns_plist
-        %x(launchctl load -w #{MASQDNS_USER_PLIST})
-      end
-
-      def self.unload_masqdns_plist
-        %x(launchctl unload -w #{MASQDNS_USER_PLIST})
-      end
-
-      def self.stop_masqdns
-        %x(launchctl stop com.github.pump.masqdnsd)
       end
 
       def self.remove_masqdns_plist

@@ -7,14 +7,14 @@ module Pump
       def self.install
         Pump.switch_privileges {
           create_rackhttp_plist
-          load_rackhttp_plist
+          Launchctl.load(RACKHTTP_USER_PLIST)
         }
       end
 
       def self.uninstall
         Pump.switch_privileges {
-          stop_rackhttp
-          unload_rackhttp_plist
+          Launchctl.stop("com.github.pump.rackhttpd")
+          Launchctl.unload(RACKHTTP_USER_PLIST)
           remove_rackhttp_plist
         }
       end
@@ -25,18 +25,6 @@ module Pump
         File.open(RACKHTTP_USER_PLIST, "w") do |file|
           file.write template
         end
-      end
-
-      def self.load_rackhttp_plist
-        %x(launchctl load -w #{RACKHTTP_USER_PLIST})
-      end
-
-      def self.unload_rackhttp_plist
-        %x(launchctl unload -w #{RACKHTTP_USER_PLIST})
-      end
-
-      def self.stop_rackhttp
-        %x(launchctl stop com.github.pump.rackhttpd)
       end
 
       def self.remove_rackhttp_plist
