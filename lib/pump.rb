@@ -14,7 +14,7 @@ require 'pump/masqdns/names'
 require 'pump/masqdns/masqdns'
 
 require 'pump/rackhttp/rackhttp'
-require 'pump/rackhttp/application'
+require 'pump/rackhttp/abstract_application'
 
 require 'pump/version'
 

@@ -13,7 +13,7 @@ module Pump
       domain, path = Settings.find_by_domain(domain)
       return if domain.nil? || path.nil? || mounted_application?(domain)
       vhost = WEBrick::HTTPServer.new :ServerName => domain.to_s, :DoNotListen => true
-      vhost.mount '/', Pump::Application, path
+      vhost.mount '/', Pump::AbstractApplication, path
       virtual_host vhost
       Pump.logger "Mounted #{domain} application"
     end

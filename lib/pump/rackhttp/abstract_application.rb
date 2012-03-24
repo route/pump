@@ -1,5 +1,5 @@
 module Pump
-  class Application < WEBrick::HTTPServlet::AbstractServlet
+  class AbstractApplication < WEBrick::HTTPServlet::AbstractServlet
     attr_reader :socket_path, :app_path
 
     def self.get_instance(server, *options)
@@ -29,7 +29,7 @@ module Pump
       socket.send Marshal.dump(env), 0
 
       status, headers, body = Marshal.load recvall(socket)
-      Pump.logger "Application response"
+      Pump.logger "AbstractApplication response"
 
       res.status = status
       headers.each do |k, vs|
