@@ -47,9 +47,12 @@ module Pump
     end
 
     def fork_app
+      Pump.logger "Creating #{socket_path} socket"
+      server_socket = UNIXServer.new(socket_path)
+
       Pump.logger "Forking new application"
       fork do
-        args = Pump.pumpup_path, app_path, socket_path
+        args = Pump.pumpup_path, app_path, server_socket.fileno, socket_path
         if defined?(RVM)
           rvm_string = RVM.tools.path_identifier(app_path)
           RVM::Environment.new(rvm_string).exec(args)
@@ -57,16 +60,8 @@ module Pump
           exec(args)
         end
       end
-      check_socket
-    end
 
-    def check_socket
-      # TODO Is there another way to check socket existence?
-      10.times do |i|
-        Pump.logger "Attempt to check socket existence ##{i}"
-        break if File.exist?(socket_path)
-        sleep 2
-      end
+      server_socket.close
     end
 
     def recvall(socket)

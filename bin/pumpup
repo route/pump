@@ -12,10 +12,10 @@ module Pump
   end
 
   class Application
-    def initialize(app_path, socket_path)
-      @app = Rack::Builder.parse_file(File.join(app_path, "config.ru")).first
-      server = UNIXServer.new(socket_path)
+    def initialize(app_path, socket_fileno, socket_path)
+      server = UNIXServer.for_fd(socket_fileno)
       at_exit { server.close; FileUtils.rm(socket_path) }
+      @app = Rack::Builder.parse_file(File.join(app_path, "config.ru")).first
 
       loop do
         Thread.new(server.accept) do |socket|
@@ -67,4 +67,4 @@ module Pump
   end
 end
 
-Pump::Application.new(ARGV[0], ARGV[1])
+Pump::Application.new(ARGV[0], ARGV[1].to_i, ARGV[2])
