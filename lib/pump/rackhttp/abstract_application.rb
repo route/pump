@@ -10,42 +10,44 @@ module Pump
     def initialize(server, app_path)
       super server
       @app_path, @socket_path = app_path, File.join(PUMP_ROOT, "var", "run", "#{File.basename(app_path)}.sock")
+      @semaphore = Mutex.new
       fork_app
     end
 
     def service(req, res)
-      Pump.logger "Incoming request"
+      @semaphore.synchronize do
+        Pump.logger "Incoming request"
+        fork_app unless File.exist?(socket_path)
+        socket = UNIXSocket.open(socket_path)
 
-      fork_app unless File.exist?(socket_path)
-      socket = UNIXSocket.open(socket_path)
-
-      env = req.meta_vars
-      env["HTTP_VERSION"] ||= env["SERVER_PROTOCOL"]
-      env["QUERY_STRING"] ||= ""
-      unless env["PATH_INFO"] == ""
-        path, n = req.request_uri.path, env["SCRIPT_NAME"].length
-        env["PATH_INFO"] = path[n, path.length-n]
-      end
-      env["REQUEST_PATH"] ||= [env["SCRIPT_NAME"], env["PATH_INFO"]].join
-
-      socket.send Marshal.dump(env), 0
-
-      status, headers, body = Marshal.load recvall(socket)
-      Pump.logger "AbstractApplication response"
-
-      res.status = status
-      headers.each do |k, vs|
-        if k.downcase == "set-cookie"
-          res.cookies.concat vs.split("\n")
-        else
-          # Since WEBrick won't accept repeated headers,
-          # merge the values per RFC 1945 section 4.2.
-          res[k] = vs.split("\n").join(", ")
+        env = req.meta_vars
+        env["HTTP_VERSION"] ||= env["SERVER_PROTOCOL"]
+        env["QUERY_STRING"] ||= ""
+        unless env["PATH_INFO"] == ""
+          path, n = req.request_uri.path, env["SCRIPT_NAME"].length
+          env["PATH_INFO"] = path[n, path.length-n]
         end
-      end
-      res.body = body
+        env["REQUEST_PATH"] ||= [env["SCRIPT_NAME"], env["PATH_INFO"]].join
 
-      socket.close
+        socket.send Marshal.dump(env), 0
+
+        status, headers, body = Marshal.load recvall(socket)
+        Pump.logger "AbstractApplication response"
+
+        res.status = status
+        headers.each do |k, vs|
+          if k.downcase == "set-cookie"
+            res.cookies.concat vs.split("\n")
+          else
+            # Since WEBrick won't accept repeated headers,
+            # merge the values per RFC 1945 section 4.2.
+            res[k] = vs.split("\n").join(", ")
+          end
+        end
+        res.body = body
+
+        socket.close
+      end
     end
 
     def fork_app
