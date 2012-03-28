@@ -18,6 +18,15 @@ We recommend you to use individual gem set for pump. Don't worry pump will be av
     $ gem install pump
     $ rvmsudo pump install
 
+NOTE: If you have installed pow and you don't want uninstall it that I have good news.
+You can install pump and remove ipfw rule:
+
+    sudo ipfw list | grep 20559
+    sudo delete NUM
+
+Where NUM is first column of command output.
+Note that if you restart system you should repeat steps again.
+
 ### Usage
 
 After `pump install`, you should create symbol link to your project.

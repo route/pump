@@ -3,17 +3,16 @@
 <plist version="1.0">
 <dict>
   <key>Label</key>
-  <string><%= SERVICE_NAME_TEMPLATE % service_name %></string>
+  <string>com.github.pump.firewall</string>
   <key>ProgramArguments</key>
   <array>
     <string>sh</string>
-    <string>-i</string>
     <string>-c</string>
-    <string>$SHELL --login -c "<%= Pump.pump_path %> <%= service_name %>"</string>
+    <string>ipfw add fwd 127.0.0.1,11280 tcp from any to me dst-port 80 in &amp;&amp; sysctl -w net.inet.ip.forwarding=1</string>
   </array>
-  <key>KeepAlive</key>
-  <true/>
   <key>RunAtLoad</key>
   <true/>
+  <key>UserName</key>
+  <string>root</string>
 </dict>
 </plist>

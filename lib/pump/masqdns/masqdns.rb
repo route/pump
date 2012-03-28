@@ -2,7 +2,6 @@ require 'socket'
 
 module Pump
   class MasqDNS
-    @@domain_names = Settings.domain_names
     @@resource = {
       "A" => Resolv::DNS::Resource::IN::A.new("127.0.0.1"),
       "AAAA" => Resolv::DNS::Resource::IN::AAAA.new("::1")
@@ -10,8 +9,6 @@ module Pump
     @@ttl = 10800 # 3 hours
 
     def initialize(addr, port)
-      trap("HUP") { reload_domain_names }
-
       # Bind port to receive requests
       socket = UDPSocket.new
       socket.bind(addr, port)
@@ -49,17 +46,13 @@ module Pump
       query.each_question do |name, typeclass|
         type = typeclass.name.split("::").last
         if type == "A" || type == "AAAA"                      # We need only A and AAAA records
-          if @@domain_names.include?(name)
+          if Settings.domain_names.include?(name)
             answer.add_answer(name, @@ttl, @@resource[type])  # Setup answer to this name
             answer.encode                                     # Don't forget encode it
           end
         end
       end
       answer
-    end
-
-    def reload_domain_names
-      @@domain_names = Settings.domain_names
     end
   end
 end

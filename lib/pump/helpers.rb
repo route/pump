@@ -1,4 +1,9 @@
+require 'pump/rvm'
+
 module Pump
+  PUMP_ROOT = File.expand_path("../../../", __FILE__)
+  USER_CONFIG_DIR = File.join(ENV["HOME"], ".pump")
+
   module Helpers
     def mac?
       !!(RUBY_PLATFORM =~ /darwin/)
@@ -22,11 +27,12 @@ module Pump
     # Switch superuser privileges
     def switch_privileges
       Process.uid, Process.gid = ENV["SUDO_UID"].to_i, ENV["SUDO_GID"].to_i
-      Process::UID.switch {
-        Process::GID.switch {
+      Process::UID.switch do
+        Process::GID.switch do
           yield
-        }
-      }
+        end
+      end
+      Process.uid, Process.gid = Process.euid, Process.egid
     end
 
     def wrapper_path
@@ -41,4 +47,6 @@ module Pump
       STDERR.puts message
     end
   end
+
+  extend Helpers
 end

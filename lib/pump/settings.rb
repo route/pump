@@ -1,23 +1,22 @@
 require 'pathname'
+require 'pump/masqdns/names'
 
 module Pump
-  USER_CONFIG_DIR = File.join(ENV["HOME"], ".pump")
-
   module Settings
     PATTERN = File.join(USER_CONFIG_DIR, "*")
 
     def self.settings
       symlinks.map do |symlink|
-        name = File.basename(symlink)
-        # TODO: Currently are using only .pump domain
-        if MasqDNS::Name.create(name).subdomain_of?(Resolv::DNS::Name.create("pump."))
-          [MasqDNS::Name.create(name), Pathname.new(symlink).realpath]
-        end
+        name = MasqDNS::Name.create File.basename(symlink)
+        path = Pathname.new(symlink).realpath
+        [name, path]
       end.compact
     end
 
     def self.symlinks
-      Dir.glob(PATTERN).select { |file| File.lstat(file).symlink? && Pathname.new(file).exist? }
+      Dir.glob(PATTERN).select do |file|
+        File.lstat(file).symlink? && Pathname.new(file).exist?
+      end
     end
 
     def self.domain_names
@@ -25,7 +24,9 @@ module Pump
     end
 
     def self.first_level_domains
-      domain_names.map { |domain| domain.to_a.last.to_s }.uniq
+      names = domain_names.map { |domain| domain.to_a.last.to_s }
+      names << "pump"
+      names.uniq
     end
 
     def self.find_by_domain(name)

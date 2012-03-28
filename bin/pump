@@ -1,24 +1,18 @@
 #!/usr/bin/env ruby
 
 require 'rubygems'
-require 'pump'
-
-abort "Currently support only Mac OS platform" unless Pump.mac?
 
 case ARGV.first
-when "install"
-  abort "Usage: #{Pump.sudo} pump install" unless Pump.superuser_rights?
-  [Pump::Install::Common, Pump::Install::MasqDNS, Pump::Install::Firewall, Pump::Install::RackHTTP].each(&:install)
+when "install", "uninstall"
+  require 'pump/install'
+  abort "Usage: #{Pump.sudo} pump #{ARGV.first}" unless Pump.superuser_rights?
+  Pump::Install.send ARGV.first
   exit
-when "uninstall"
-  abort "Usage: #{Pump.sudo} pump uninstall" unless Pump.superuser_rights?
-  [Pump::Install::MasqDNS, Pump::Install::RackHTTP, Pump::Install::Firewall, Pump::Install::Common].each(&:uninstall)
-  exit
-when "masqdnsd"
-  Pump.masqdnsd
-when "rackhttpd"
-  Pump.rackhttpd
+when "masqdnsd", "rackhttpd"
+  require 'pump'
+  Pump.send ARGV.first
 when "version"
+  require 'pump/version'
   puts Pump::VERSION; exit
 else
   puts "Usage: pump #{%w{ install uninstall version }.join(' | ')}"

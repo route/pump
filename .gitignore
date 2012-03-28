@@ -4,3 +4,4 @@
 pkg/*
 tmp
 tags
+.DS_Store
