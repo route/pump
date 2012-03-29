@@ -2,9 +2,11 @@ module Pump
   class AbstractApplication < WEBrick::HTTPServlet::AbstractServlet
     attr_reader :socket_path, :app_path
 
-    def self.get_instance(server, *options)
-      Pump.logger "Getting instance of application"
-      @@app ||= new(server, *options)
+    def self.get_instance(server, app_path)
+      Pump.logger "Getting instance of application #{app_path.inspect}"
+      @@apps ||= Hash.new
+      @@apps[app_path] ||= new(server, app_path)
+      @@apps[app_path]
     end
 
     def initialize(server, app_path)

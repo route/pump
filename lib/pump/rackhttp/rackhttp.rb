@@ -9,7 +9,7 @@ module Pump
     end
 
     def mount_application(domain)
-      Pump.logger "Trying to mount application"
+      Pump.logger "Trying to mount application #{domain}"
       domain, path = Settings.find_by_domain(domain)
       return if domain.nil? || path.nil? || mounted_application?(domain)
       vhost = WEBrick::HTTPServer.new :ServerName => domain.to_s, :DoNotListen => true
