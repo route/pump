@@ -1,62 +1,58 @@
 module Pump
-  class AbstractApplication < WEBrick::HTTPServlet::AbstractServlet
+  class AbstractApplication
     attr_reader :socket_path, :app_path
 
-    def self.get_instance(server, app_path)
-      Pump.logger "Getting instance of application #{app_path.inspect}"
+    def self.get_instance(app_path)
       @@apps ||= Hash.new
-      @@apps[app_path] ||= new(server, app_path)
+      @@apps[app_path] ||= new(app_path)
+      debug "Got instance of application #{app_path}"
       @@apps[app_path]
     end
 
-    def initialize(server, app_path)
-      super server
+    def initialize(app_path)
       @app_path, @socket_path = app_path, File.join(PUMP_ROOT, "var", "run", "#{File.basename(app_path)}.sock")
-      @semaphore = Mutex.new
       fork_app
     end
 
     def service(req, res)
-      @semaphore.synchronize do
-        Pump.logger "Incoming request"
-        fork_app unless File.exist?(socket_path)
-        socket = UNIXSocket.open(socket_path)
+      fork_app unless File.exist?(socket_path)
+      socket = UNIXSocket.open(socket_path)
 
-        env = req.meta_vars
-        env["HTTP_VERSION"] ||= env["SERVER_PROTOCOL"]
-        env["QUERY_STRING"] ||= ""
-        unless env["PATH_INFO"] == ""
-          path, n = req.request_uri.path, env["SCRIPT_NAME"].length
-          env["PATH_INFO"] = path[n, path.length-n]
-        end
-        env["REQUEST_PATH"] ||= [env["SCRIPT_NAME"], env["PATH_INFO"]].join
-
-        socket.send Marshal.dump(env), 0
-
-        status, headers, body = Marshal.load recvall(socket)
-        Pump.logger "AbstractApplication response"
-
-        res.status = status
-        headers.each do |k, vs|
-          if k.downcase == "set-cookie"
-            res.cookies.concat vs.split("\n")
-          else
-            # Since WEBrick won't accept repeated headers,
-            # merge the values per RFC 1945 section 4.2.
-            res[k] = vs.split("\n").join(", ")
-          end
-        end
-        res.body = body
-
-        socket.close
+      env = req.meta_vars
+      env["HTTP_VERSION"] ||= env["SERVER_PROTOCOL"]
+      env["QUERY_STRING"] ||= ""
+      unless env["PATH_INFO"] == ""
+        path, n = req.request_uri.path, env["SCRIPT_NAME"].length
+        env["PATH_INFO"] = path[n, path.length-n]
       end
+      env["REQUEST_PATH"] ||= [env["SCRIPT_NAME"], env["PATH_INFO"]].join
+      env["body"] = req.body.to_s
+
+      socket.send Marshal.dump(env), 0
+
+      data = receive_data(socket)
+      debug "Response size: #{data.size}"
+
+      status, headers, body = Marshal.load(data)
+
+      res.status = status
+      headers.each do |k, vs|
+        if k.downcase == "set-cookie"
+          res.cookies.concat vs.split("\n")
+        else
+          # Since WEBrick won't accept repeated headers,
+          # merge the values per RFC 1945 section 4.2.
+          res[k] = vs.split("\n").join(", ")
+        end
+      end
+      res.body = body
     end
 
     def fork_app
-      Pump.logger "Creating #{socket_path} socket"
+      debug "Creating #{socket_path} socket"
       server_socket = UNIXServer.new(socket_path)
 
-      Pump.logger "Forking new application"
+      debug "Forking new application"
       fork do
         args = Pump.pumpup_path, app_path, server_socket.fileno, socket_path
         if defined?(RVM)
@@ -70,14 +66,13 @@ module Pump
       server_socket.close
     end
 
-    def recvall(socket)
-      str = ""
+    def receive_data(socket, buffer = "")
       loop do
-        data, info = socket.recvfrom(512)
-        str << data
-        break if data.empty? || IO.select([socket], nil, nil, 0).nil?
+        part = socket.recv(1024)
+        break if part.empty?
+        buffer << part
       end
-      str
+      buffer
     end
   end
 end

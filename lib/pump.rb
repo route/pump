@@ -16,17 +16,6 @@ module Pump
   # Run rackhttp server
   def self.rackhttpd
     $0 = "rackhttpd"
-
-    server = RackHTTP.new(
-      :BindAddress => "127.0.0.1",
-      :Port => 11280,
-      :DocumentRoot => File.join(PUMP_ROOT, "public"),
-      :Logger => WEBrick::Log.new('/dev/null')
-    )
-
-    trap(:INT) { server.shutdown }
-    trap(:TERM) { server.shutdown }
-
-    server.start
+    RackHTTP.new "127.0.0.1", 11280
   end
 end

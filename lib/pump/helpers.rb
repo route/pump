@@ -50,3 +50,7 @@ module Pump
 
   extend Helpers
 end
+
+def debug(*options)
+  Pump.logger(*options)
+end

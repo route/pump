@@ -61,9 +61,9 @@ module Pump
 
       def create_plist
         config = ERB.new File.read(self::PLIST_TEMPLATE % service_name)
-        Pump.logger "Open plist template #{self::PLIST_TEMPLATE % service_name}"
+        debug "Open plist template #{self::PLIST_TEMPLATE % service_name}"
         template = config.result(binding)
-        Pump.logger "Write plist #{self::PLIST % service_name}"
+        debug "Write plist #{self::PLIST % service_name}"
         File.open(self::PLIST % service_name, "w") do |file|
           file.write template
         end
@@ -71,7 +71,7 @@ module Pump
 
       def remove_plist
         if File.exist?(self::PLIST % service_name)
-          Pump.logger "Remove plist #{self::PLIST % service_name}"
+          debug "Remove plist #{self::PLIST % service_name}"
           FileUtils.rm(self::PLIST % service_name)
         end
       end

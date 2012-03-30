@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    pump (0.0.1.alpha)
+    pump (0.1.1.beta)
 
 GEM
   remote: http://rubygems.org/

@@ -2,6 +2,7 @@
 
 require 'rubygems'
 
+require 'stringio'
 require 'fileutils'
 require 'socket'
 
@@ -9,10 +10,6 @@ require 'rack'
 require 'rack/builder'
 
 module Pump
-  def self.logger(message)
-    STDERR.puts message
-  end
-
   class Application
     IDLE = 1800 # 30 minutes for idle, otherwise process should be killed
     TICK = 30   # seconds for periodic selecting data on socket
@@ -30,18 +27,20 @@ module Pump
         unless IO.select([@server], nil, nil, TICK).nil?
           @idle = 0 # reset idle time
 
-          Thread.new(@server.accept) do |socket|
-            Pump.logger "Accepted new client"
+          socket = @server.accept
+          debug "Incoming request"
 
-            env = Marshal.load recvall(socket)
-            response = app_call(env)
-            Pump.logger "Accepted answer from application"
+          env = Marshal.load receive_data(socket)
+          response = app_call(env)
 
-            socket.send Marshal.dump(response), 0
-            socket.close
-          end
+          debug "Accepted answer from application"
+          response = Marshal.dump(response)
+          debug "Application response size: #{response.size}"
+          sent = socket.send response, 0
+          debug "Sent through socket: #{sent}"
+
+          socket.close
         else
-          Pump.logger "tick"
           @idle += TICK
           exit if @idle >= IDLE
         end
@@ -52,7 +51,7 @@ module Pump
       response_body = ""
       env.delete_if { |k, v| v.nil? }
 
-      rack_input = StringIO.new
+      rack_input = StringIO.new(env["body"])
       rack_input.set_encoding(Encoding::BINARY) if rack_input.respond_to?(:set_encoding)
 
       env.update({
@@ -66,20 +65,25 @@ module Pump
       })
 
       status, headers, body = @app.call(env)
+
       body.each { |part| response_body << part }
       body.close  if body.respond_to? :close
 
       [status.to_i, headers.to_hash, response_body]
     end
 
-    def recvall(socket)
-      str = ""
-      loop do
-        data, info = socket.recvfrom(512)
-        str << data
-        break if data.empty? || IO.select([socket], nil, nil, 0).nil?
+    def receive_data(socket, buffer = "")
+      while part = socket.recv(1024)
+        buffer << part unless part.empty?
+        break if IO.select([socket], nil, nil, 0).nil? || part.empty?
       end
-      str
+      buffer
+    end
+
+    private
+
+    def debug(message)
+      STDERR.puts message
     end
   end
 end

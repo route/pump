@@ -30,7 +30,7 @@ module Pump
       resolvers do |resolver|
         unless File.exist?(resolver)
           FileUtils.cp(CONFIG, resolver)
-          Pump.logger "Resolver #{resolver} was created."
+          debug "Resolver #{resolver} was created."
         end
       end
     end
@@ -39,7 +39,7 @@ module Pump
       resolvers do |resolver|
         if File.exist?(resolver)
           FileUtils.rm(resolver)
-          Pump.logger "Resolver #{resolver} was removed."
+          debug "Resolver #{resolver} was removed."
         end
       end
     end

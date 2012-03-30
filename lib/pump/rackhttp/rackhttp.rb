@@ -1,25 +1,40 @@
 require 'webrick'
 
 module Pump
-  class RackHTTP < WEBrick::HTTPServer
+  class RackHTTP
+    @@config = WEBrick::Config::HTTP
+
+    def initialize(address, port)
+      @server = TCPServer.new(address, port)
+      handle_requests
+    end
+
+    def handle_requests
+      loop do
+        client = @server.accept
+        req, res = WEBrick::HTTPRequest.new(@@config), WEBrick::HTTPResponse.new(@@config)
+        req.parse(client)
+
+        debug "Request: #{req.unparsed_uri}"
+
+        if app = lookup_server(req)
+          app.service(req, res)
+        else
+          res.status = 200
+          res.body = "Rack server not found."
+        end
+
+        client.send res.to_s, 0
+        client.close
+
+        debug "Answer #{res.object_id} sent."
+      end
+    end
+
     def lookup_server(req)
-      Pump.logger "Lookup responsible server"
-      mount_application req.host
-      super
-    end
-
-    def mount_application(domain)
-      Pump.logger "Trying to mount application #{domain}"
-      domain, path = Settings.find_by_domain(domain)
-      return if domain.nil? || path.nil? || mounted_application?(domain)
-      vhost = WEBrick::HTTPServer.new :ServerName => domain.to_s, :DoNotListen => true
-      vhost.mount '/', Pump::AbstractApplication, path
-      virtual_host vhost
-      Pump.logger "Mounted #{domain} application"
-    end
-
-    def mounted_application?(domain)
-      @virtual_hosts.find { |s| s[:ServerName] == domain.to_s }
+      debug "Lookup responsible server"
+      domain, path = Settings.find_by_domain(req.host)
+      Pump::AbstractApplication.get_instance(path) if path
     end
   end
 end
