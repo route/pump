@@ -3,15 +3,15 @@
 require 'rubygems'
 
 case ARGV.first
-when "install", "uninstall"
+when 'install', 'uninstall'
   require 'pump/install'
   abort "Usage: #{Pump.sudo} pump #{ARGV.first}" unless Pump.superuser_rights?
   Pump::Install.send ARGV.first
   exit
-when "masqdnsd", "rackhttpd"
+when 'masqdnsd', 'rackhttpd'
   require 'pump'
   Pump.send ARGV.first
-when "version"
+when 'version'
   require 'pump/version'
   puts Pump::VERSION; exit
 else

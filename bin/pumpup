@@ -1,91 +1,57 @@
 #!/usr/bin/env ruby
 
-require 'rubygems'
-
-require 'stringio'
-require 'fileutils'
-require 'socket'
-
 require 'rack'
-require 'rack/builder'
+require 'drb/drb'
+require 'drb/timeridconv'
+require 'action_dispatch'
+require 'active_record'
 
-module Pump
-  class Application
-    IDLE = 1800 # 30 minutes for idle, otherwise process should be killed
-    TICK = 30   # seconds for periodic selecting data on socket
+# class Rack::BodyProxy
+#   include DRb::DRbUndumped
+# end
+# 
+# class ActionDispatch::BodyProxy
+#   include DRb::DRbUndumped
+# end
+# 
+# class ActiveRecord::ConnectionAdapters::ConnectionManagement::Proxy
+#   include DRb::DRbUndumped
+# end
+# 
+# class ActiveRecord::QueryCache::BodyProxy
+#   include DRb::DRbUndumped
+# end
+# 
+# class ActiveSupport::SafeBuffer
+#   include DRb::DRbUndumped
+# end
 
-    def initialize(app_path, socket_fileno, socket_path)
-      @idle = 0
-      @server = UNIXServer.for_fd(socket_fileno)
-      at_exit { @server.close; FileUtils.rm(socket_path) }
-      @app = Rack::Builder.parse_file(File.join(app_path, "config.ru")).first
-      handle_requests
-    end
+config = ARGV.first
+config ||= '/Users/route/Projects/cybergifts/config.ru'
+app = Rack::Builder.parse_file(config).first
 
-    def handle_requests
-      loop do
-        unless IO.select([@server], nil, nil, TICK).nil?
-          @idle = 0 # reset idle time
+class Wrapper
+  include DRb::DRbUndumped
 
-          socket = @server.accept
-          debug "Incoming request"
+  def initialize(app)
+    @app = app
+  end
 
-          env = Marshal.load receive_data(socket)
-          response = app_call(env)
+  def call(req)
+    req['rack.input'] = StringIO.new unless req['rack.input']
+    req['rack.errors'] = StringIO.new unless req['rack.errors']
+    res = @app.call(req)
+    res.last.close if res.last.respond_to? :close
 
-          debug "Accepted answer from application"
-          response = Marshal.dump(response)
-          debug "Application response size: #{response.size}"
-          sent = socket.send response, 0
-          debug "Sent through socket: #{sent}"
+    # res.last.each do |part|
+    #   raise part.class.name
+    # end
 
-          socket.close
-        else
-          @idle += TICK
-          exit if @idle >= IDLE
-        end
-      end
-    end
-
-    def app_call(env)
-      response_body = ""
-      env.delete_if { |k, v| v.nil? }
-
-      rack_input = StringIO.new(env["body"])
-      rack_input.set_encoding(Encoding::BINARY) if rack_input.respond_to?(:set_encoding)
-
-      env.update({
-        "rack.version" => Rack::VERSION,
-        "rack.input" => rack_input,
-        "rack.errors" => $stderr,
-        "rack.multithread" => true,
-        "rack.multiprocess" => false,
-        "rack.run_once" => false,
-        "rack.url_scheme" => ["yes", "on", "1"].include?(ENV["HTTPS"]) ? "https" : "http"
-      })
-
-      status, headers, body = @app.call(env)
-
-      body.each { |part| response_body << part }
-      body.close  if body.respond_to? :close
-
-      [status.to_i, headers.to_hash, response_body]
-    end
-
-    def receive_data(socket, buffer = "")
-      while part = socket.recv(1024)
-        buffer << part unless part.empty?
-        break if IO.select([socket], nil, nil, 0).nil? || part.empty?
-      end
-      buffer
-    end
-
-    private
-
-    def debug(message)
-      STDERR.puts message
-    end
+    res.extend(DRb::DRbUndumped)
+    res
   end
 end
 
-Pump::Application.new(ARGV[0], ARGV[1].to_i, ARGV[2])
+DRb.install_id_conv(DRb::TimerIdConv.new)
+DRb.start_service('druby://localhost:8787', Wrapper.new(app))
+DRb.thread.join

@@ -1,19 +1,22 @@
-# -*- encoding: utf-8 -*-
-$:.push File.expand_path("../lib", __FILE__)
-require "pump/version"
+lib = File.expand_path('../lib', __FILE__)
+$LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
+require 'pump/version'
 
-Gem::Specification.new do |s|
-  s.name        = "pump"
-  s.version     = Pump::VERSION
-  s.authors     = ["Dmitriy Vorotilin"]
-  s.email       = ["d.vorotilin@gmail.com"]
-  s.homepage    = "https://github.com/evrone/pump"
-  s.summary     = "Ruby Rack server for developers"
-  s.description = "Zero-configuration Rack server written on pure ruby"
+Gem::Specification.new do |gem|
+  gem.name        = 'pump'
+  gem.version     = Pump::VERSION
+  gem.authors     = 'Dmitry Vorotilin'
+  gem.email       = 'd.vorotilin@gmail.com'
+  gem.description = 'Zero-configuration rack server for multiple applications running simultaneously'
+  gem.summary     = 'Zero-configuration rack server written on pure ruby'
+  gem.homepage    = 'https://github.com/route/pump'
 
-  s.rubyforge_project = "pump"
+  gem.files         = `git ls-files`.split($\)
+  gem.executables   = gem.files.grep(%r{^bin/}).map{ |f| File.basename(f) }
+  gem.test_files    = gem.files.grep(%r{^test/})
+  gem.require_paths = ['lib']
 
-  s.files         = Dir["bin/*", "config/*", "lib/**/*", "public/*", "var/**/.*", "Gemfile", "LICENSE", "Rakefile", "README.md", "pump.gemspec"]
-  s.executables   = Dir["bin/*"].map{ |f| File.basename(f) }
-  s.require_paths = ["lib"]
+  gem.add_runtime_dependency 'puma'
+  gem.add_runtime_dependency 'masquito'
+  gem.add_runtime_dependency 'activesupport'
 end
